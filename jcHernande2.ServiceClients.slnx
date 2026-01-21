@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/jcHernande2.ServiceClients.Http/jcHernande2.ServiceClients.Http.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/jcHernande2.ServiceClients.Http.Tests/jcHernande2.ServiceClients.Http.Tests.csproj" />
+  </Folder>
+</Solution>
