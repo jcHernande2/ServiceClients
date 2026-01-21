@@ -18,4 +18,8 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\jcHernande2.ServiceClients.Http\jcHernande2.ServiceClients.Http.csproj" />
+  </ItemGroup>
+
 </Project>
