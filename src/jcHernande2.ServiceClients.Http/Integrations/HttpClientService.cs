@@ -3,7 +3,6 @@
     using System;
     using System.Collections.Generic;
     using System.Net;
-    using System.Net.Http;
     using System.Text;
     using System.Threading.Tasks;
     using jcHernande2.ServiceClients.Http.Models;
@@ -13,8 +12,8 @@
 
     public class HttpClientService : IHttpClient
     {
-        private readonly HttpClient httpClient;
-        public HttpClientService(HttpClient HttpClient)
+        private readonly System.Net.Http.HttpClient httpClient;
+        public HttpClientService(System.Net.Http.HttpClient HttpClient)
         {
             httpClient = HttpClient;
         }
