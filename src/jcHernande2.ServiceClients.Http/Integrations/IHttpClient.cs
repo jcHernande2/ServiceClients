@@ -14,5 +14,6 @@
         Task<TO> PutAsync<TO, TI>(string url, TI data, HttpRequestOptions options = null);
         TO Delete<TO>(string url, HttpRequestOptions options = null);
         Task<TO> DeleteAsync<TO>(string url, HttpRequestOptions options = null);
+        Task<TO> SendAsync<TO, TI>(TI obj, string token, HttpMethod httpMethod, string urlParams = "");
     }
 }

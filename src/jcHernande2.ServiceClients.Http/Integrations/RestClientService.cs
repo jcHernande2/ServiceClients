@@ -177,5 +177,39 @@
         {
             return await ExecuteAsync<TO, object>($"{restClient.Options.BaseUrl?.OriginalString}{path}", null, options, Method.Delete);
         }
+        public async Task<TO> SendAsync<TO, TI>(TI obj, string token, HttpMethod httpMethod, string urlParams = "")
+        {
+            var method = httpMethod.Method.ToUpper() switch
+            {
+                "GET" => Method.Get,
+                "POST" => Method.Post,
+                "PUT" => Method.Put,
+                "DELETE" => Method.Delete,
+                _ => throw new NotImplementedException(),
+            };
+
+            var request = new RestRequest(urlParams, method);
+
+            if (!string.IsNullOrEmpty(token))
+            {
+                request.AddHeader("Authorization", $"Bearer {token}");
+            }
+
+            if (obj != null && method != Method.Get && method != Method.Delete)
+            {
+                var json = JsonConvert.SerializeObject(obj, JsonSettings);
+                request.AddJsonBody(json);
+            }
+
+            try
+            {
+                var response = await restClient.ExecuteAsync(request).ConfigureAwait(false) as RestResponse;
+                return HandleResponse<TO>(response);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
     }
 }
