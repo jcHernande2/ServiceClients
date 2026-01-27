@@ -103,15 +103,8 @@
         public async Task<TO> PostAsync<TO, TI>(string url, TI data, HttpRequestOptions options = null)
         {
             var content = CreateRequest(data, options);
-            try
-            {
-                var response = await httpClient.PostAsync($"{httpClient.BaseAddress.AbsoluteUri}{url}", content).ConfigureAwait(false);
-                return await HandleResponseAsync<TO>(response).ConfigureAwait(false);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            var response = await httpClient.PostAsync($"{httpClient.BaseAddress.AbsoluteUri}{url}", content).ConfigureAwait(false);
+            return await HandleResponseAsync<TO>(response).ConfigureAwait(false);
         }
         public TO Get<TO>(string url, HttpRequestOptions options = null)
         {
@@ -123,15 +116,8 @@
         }
         public async Task<TO> GetAsync<TO>(string url, HttpRequestOptions options = null)
         {
-            try
-            {
-                var response = await httpClient.GetAsync($"{httpClient.BaseAddress.AbsoluteUri}{url}").ConfigureAwait(false);
-                return await HandleResponseAsync<TO>(response).ConfigureAwait(false);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            var response = await httpClient.GetAsync($"{httpClient.BaseAddress.AbsoluteUri}{url}").ConfigureAwait(false);
+            return await HandleResponseAsync<TO>(response).ConfigureAwait(false);
         }
         public TO Put<TO, TI>(string url, TI data, HttpRequestOptions options = null)
         {
@@ -143,15 +129,8 @@
         public async Task<TO> PutAsync<TO, TI>(string url, TI data, HttpRequestOptions options = null)
         {
             var content = CreateRequest(data, options);
-            try
-            {
-                var response = await httpClient.PutAsync($"{httpClient.BaseAddress.AbsoluteUri}{url}", content).ConfigureAwait(false);
-                return await HandleResponseAsync<TO>(response).ConfigureAwait(false);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            var response = await httpClient.PutAsync($"{httpClient.BaseAddress.AbsoluteUri}{url}", content).ConfigureAwait(false);
+            return await HandleResponseAsync<TO>(response).ConfigureAwait(false);
         }
         public TO Delete<TO>(string url, HttpRequestOptions options = null)
         {
@@ -162,15 +141,8 @@
         }
         public async Task<TO> DeleteAsync<TO>(string url, HttpRequestOptions options = null)
         {
-            try
-            {
-                var response = await httpClient.DeleteAsync($"{httpClient.BaseAddress.AbsoluteUri}{url}").ConfigureAwait(false);
-                return await HandleResponseAsync<TO>(response).ConfigureAwait(false);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            var response = await httpClient.DeleteAsync($"{httpClient.BaseAddress.AbsoluteUri}{url}").ConfigureAwait(false);
+            return await HandleResponseAsync<TO>(response).ConfigureAwait(false);
         }
         public async Task<TO> SendAsync<TO, TI>(TI obj, string token, HttpMethod httpMethod, string urlParams = "")
         {
@@ -179,52 +151,16 @@
                 NullValueHandling = NullValueHandling.Ignore,
                 Converters = new List<JsonConverter> { new StringEnumConverter() }
             });
-            try 
+            
+            using (var content = new StringContent(json, Encoding.UTF8, "application/json"))
+            using (var request = new HttpRequestMessage(httpMethod, $"{httpClient.BaseAddress.AbsoluteUri}{urlParams}")
             {
-                var request = new HttpRequestMessage(httpMethod, $"{httpClient.BaseAddress.AbsoluteUri}{urlParams}")
-                {
-                    Content = new StringContent(json, Encoding.UTF8, "application/json"),
-                };
-                request.Headers.Authorization =
-                new AuthenticationHeaderValue("Basic", token);
-
+                Content = content,
+            })
+            {
+                request.Headers.Authorization = new AuthenticationHeaderValue("Basic", token);
                 var response = await httpClient.SendAsync(request);
-                var responseContent = await response.Content.ReadAsStringAsync();
-                if (response.StatusCode == HttpStatusCode.RequestTimeout || response.StatusCode == HttpStatusCode.GatewayTimeout)
-                {
-                    throw new TimeoutException($"La petición HTTP excedió el tiempo de espera configurado {response.StatusCode}.");
-                }
-                if (response.StatusCode == HttpStatusCode.BadRequest)
-                {
-                    try
-                    {
-                        var exception = JsonConvert.DeserializeObject<ModelException>(responseContent);
-                        if (exception != null && !string.IsNullOrEmpty(exception.Message))
-                        {
-                            throw new jcHernande2Exception(exception.Message, exception);
-                        }
-                        else
-                        {
-                            throw new jcHernande2Exception("Bad request: Error al intentar deserializar response.Content con ModelException", exception);
-                        }
-                    }
-                    catch (JsonException jsonEx)
-                    {
-
-                        throw new JsonException(
-                            $"Bad request: No se pudo deserializar la respuesta del servidor. Content: {responseContent},{jsonEx.Message}");
-                    }
-                }
-                response.EnsureSuccessStatusCode();
-                return JsonConvert.DeserializeObject<TO>(responseContent);
-            }
-            catch (TaskCanceledException tex) when (!tex.CancellationToken.IsCancellationRequested)
-            {
-                throw new TimeoutException("La petición HTTP excedió el tiempo de espera configurado.", tex);
-            }
-            catch
-            {
-                throw;
+                return await HandleResponseAsync<TO>(response).ConfigureAwait(false);
             }
         }
     }
