@@ -23,7 +23,7 @@
             try
             {
                 var exception = JsonConvert.DeserializeObject<ModelException>(responseContent);
-                throw new ServiceClientException(exception?.Message ?? "Bad request", new Exception(exception?.Message ?? "Bad request"));
+                throw new ServiceClientException(exception?.Message ?? "Bad request", exception);
             }
             catch (JsonException)
             {

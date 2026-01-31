@@ -101,7 +101,7 @@
             switch (response.StatusCode)
             {
                 case HttpStatusCode.Unauthorized:
-                    throw new jcHernande2Exception("Unauthorized");
+                    throw new ServiceClientException("Unauthorized");
 
                 case HttpStatusCode.BadRequest:
                     HandleBadRequest(response);
@@ -123,7 +123,7 @@
             try
             {
                 var exception = JsonConvert.DeserializeObject<ModelException>(response.Content);
-                throw new jcHernande2Exception(exception?.Message ?? "Bad request", exception);
+                throw new ServiceClientException(exception?.Message ?? "Bad request", exception);
             }
             catch (JsonException)
             {
