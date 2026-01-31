@@ -2,6 +2,7 @@ namespace jcHernande2.ServiceClients.Http.Tests.Integrations
 {
     using System;
     using System.Net.Http;
+    using System.Threading.Tasks;
     
     using jcHernande2.ServiceClients.Http.Integrations;
 
@@ -34,7 +35,17 @@ namespace jcHernande2.ServiceClients.Http.Tests.Integrations
             // Assert
             Assert.NotNull(result);
             Assert.Equal(1, result.Id);
-        }   
+        }
+
+        [Fact]
+        public async Task PostWithTokenAsync_ShouldReturnCreatedResource()
+        {
+            var req = new JsonRequest { Title = "foo", Body = "bar", UserId = 1 };
+            var result = await _httpClientService.PostWithTokenAsync<JsonResponse, JsonRequest>(req, "", "posts");
+
+            Assert.NotNull(result);
+            Assert.True(result.Id > 0);
+        }
     }
 }
 

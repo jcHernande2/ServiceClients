@@ -87,6 +87,25 @@
             }
             return content;
         }
+        private async Task<TO> SendAsync<TO, TI>(TI obj, string token, HttpMethod httpMethod, string urlParams = "")
+        {
+            var json = JsonConvert.SerializeObject(obj, Formatting.None, new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore,
+                Converters = new List<JsonConverter> { new StringEnumConverter() }
+            });
+            
+            using (var content = new StringContent(json, Encoding.UTF8, "application/json"))
+            using (var request = new HttpRequestMessage(httpMethod, $"{httpClient.BaseAddress.AbsoluteUri}{urlParams}")
+            {
+                Content = content,
+            })
+            {
+                request.Headers.Authorization = new AuthenticationHeaderValue("Basic", token);
+                var response = await httpClient.SendAsync(request);
+                return await HandleResponseAsync<TO>(response).ConfigureAwait(false);
+            }
+        }
         public string GetBaseUrl()
         {
             return "";
@@ -105,6 +124,26 @@
             var content = CreateRequest(data, options);
             var response = await httpClient.PostAsync($"{httpClient.BaseAddress.AbsoluteUri}{url}", content).ConfigureAwait(false);
             return await HandleResponseAsync<TO>(response).ConfigureAwait(false);
+        }
+
+        public async Task<TO> PostWithTokenAsync<TO, TI>(
+        string urlOrRelativePath,
+        TI body,
+        string token,
+        string scheme = "Bearer",
+        HttpRequestOptions options = null,
+        CancellationToken cancellationToken = default)
+        {
+            return await this.SendAsync<TO, TI>(body, token, HttpMethod.Post, urlOrRelativePath).ConfigureAwait(false);
+        }
+        public async Task<TO> PostAuthenticatedAsync<TO, TI>(
+        string urlOrRelativePath,
+        TI body,
+        AuthenticationHeaderValue auth,
+        HttpRequestOptions options = null,
+        CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
         }
         public TO Get<TO>(string url, HttpRequestOptions options = null)
         {
@@ -144,24 +183,6 @@
             var response = await httpClient.DeleteAsync($"{httpClient.BaseAddress.AbsoluteUri}{url}").ConfigureAwait(false);
             return await HandleResponseAsync<TO>(response).ConfigureAwait(false);
         }
-        public async Task<TO> SendAsync<TO, TI>(TI obj, string token, HttpMethod httpMethod, string urlParams = "")
-        {
-            var json = JsonConvert.SerializeObject(obj, Formatting.None, new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore,
-                Converters = new List<JsonConverter> { new StringEnumConverter() }
-            });
-            
-            using (var content = new StringContent(json, Encoding.UTF8, "application/json"))
-            using (var request = new HttpRequestMessage(httpMethod, $"{httpClient.BaseAddress.AbsoluteUri}{urlParams}")
-            {
-                Content = content,
-            })
-            {
-                request.Headers.Authorization = new AuthenticationHeaderValue("Basic", token);
-                var response = await httpClient.SendAsync(request);
-                return await HandleResponseAsync<TO>(response).ConfigureAwait(false);
-            }
-        }
+        
     }
 }

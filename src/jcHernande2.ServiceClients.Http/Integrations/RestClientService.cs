@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Net;
+    using System.Net.Http.Headers;
     using System.Threading.Tasks;
     using jcHernande2.ServiceClients.Http.Models;
     using jcHernande2.ServiceClients.Http.Models.Exception;
@@ -141,43 +142,7 @@
                 default: throw new NotImplementedException();
             };
         }
-        public string GetBaseUrl()
-        {
-            return this.restClient.Options.BaseUrl?.OriginalString;
-        }
-        public TO Post<TO, TI>(string path,TI data,HttpRequestOptions options = null)
-        {
-            return Execute<TO, TI>($"{restClient.Options.BaseUrl?.OriginalString}{path}", data, options, Method.Post);
-        }
-        public async Task<TO> PostAsync<TO, TI>(string path, TI data, HttpRequestOptions options = null) 
-        {
-            return await ExecuteAsync<TO, TI>($"{restClient.Options.BaseUrl?.OriginalString}{path}", data, options, Method.Post);
-        }
-        public TO Get<TO>(string path, HttpRequestOptions options = null)
-        {
-            return Execute<TO, object>($"{restClient.Options.BaseUrl?.OriginalString}{path}", null, options, Method.Get);
-        }
-        public async Task<TO> GetAsync<TO>(string path, HttpRequestOptions options = null)
-        {
-            return await ExecuteAsync<TO, object>($"{restClient.Options.BaseUrl?.OriginalString}{path}", null, options, Method.Get);
-        }
-        public TO Put<TO, TI>(string path, TI data, HttpRequestOptions options = null)
-        {
-            return Execute<TO, TI>($"{restClient.Options.BaseUrl?.OriginalString}{path}", data, options, Method.Put);
-        }
-        public async Task<TO> PutAsync<TO, TI>(string path, TI data, HttpRequestOptions options = null)
-        {
-            return await ExecuteAsync<TO, TI>($"{restClient.Options.BaseUrl?.OriginalString}{path}", data, options, Method.Put);
-        }
-        public TO Delete<TO>(string path, HttpRequestOptions options = null)
-        {
-            return Execute<TO, object>($"{restClient.Options.BaseUrl?.OriginalString}{path}", null, options, Method.Delete);
-        }
-        public async Task<TO> DeleteAsync<TO>(string path, HttpRequestOptions options = null)
-        {
-            return await ExecuteAsync<TO, object>($"{restClient.Options.BaseUrl?.OriginalString}{path}", null, options, Method.Delete);
-        }
-        public async Task<TO> SendAsync<TO, TI>(TI obj, string token, HttpMethod httpMethod, string urlParams = "")
+        private async Task<TO> SendAsync<TO, TI>(TI obj, string token, HttpMethod httpMethod, string urlParams = "")
         {
             var method = httpMethod.Method.ToUpper() switch
             {
@@ -211,5 +176,61 @@
                 throw;
             }
         }
+        public string GetBaseUrl()
+        {
+            return this.restClient.Options.BaseUrl?.OriginalString;
+        }
+        public TO Post<TO, TI>(string path,TI data,HttpRequestOptions options = null)
+        {
+            return Execute<TO, TI>($"{restClient.Options.BaseUrl?.OriginalString}{path}", data, options, Method.Post);
+        }
+        public async Task<TO> PostAsync<TO, TI>(string path, TI data, HttpRequestOptions options = null) 
+        {
+            return await ExecuteAsync<TO, TI>($"{restClient.Options.BaseUrl?.OriginalString}{path}", data, options, Method.Post);
+        }
+        public async Task<TO> PostWithTokenAsync<TO, TI>(
+        string urlOrRelativePath,
+        TI body,
+        string token,
+        string scheme = "Bearer",
+        HttpRequestOptions options = null,
+        CancellationToken cancellationToken = default)
+        {
+            return await this.SendAsync<TO, TI>(body, token, HttpMethod.Post, urlOrRelativePath).ConfigureAwait(false);
+        }
+        public async Task<TO> PostAuthenticatedAsync<TO, TI>(
+        string urlOrRelativePath,
+        TI body,
+        AuthenticationHeaderValue auth,
+        HttpRequestOptions options = null,
+        CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+        public TO Get<TO>(string path, HttpRequestOptions options = null)
+        {
+            return Execute<TO, object>($"{restClient.Options.BaseUrl?.OriginalString}{path}", null, options, Method.Get);
+        }
+        public async Task<TO> GetAsync<TO>(string path, HttpRequestOptions options = null)
+        {
+            return await ExecuteAsync<TO, object>($"{restClient.Options.BaseUrl?.OriginalString}{path}", null, options, Method.Get);
+        }
+        public TO Put<TO, TI>(string path, TI data, HttpRequestOptions options = null)
+        {
+            return Execute<TO, TI>($"{restClient.Options.BaseUrl?.OriginalString}{path}", data, options, Method.Put);
+        }
+        public async Task<TO> PutAsync<TO, TI>(string path, TI data, HttpRequestOptions options = null)
+        {
+            return await ExecuteAsync<TO, TI>($"{restClient.Options.BaseUrl?.OriginalString}{path}", data, options, Method.Put);
+        }
+        public TO Delete<TO>(string path, HttpRequestOptions options = null)
+        {
+            return Execute<TO, object>($"{restClient.Options.BaseUrl?.OriginalString}{path}", null, options, Method.Delete);
+        }
+        public async Task<TO> DeleteAsync<TO>(string path, HttpRequestOptions options = null)
+        {
+            return await ExecuteAsync<TO, object>($"{restClient.Options.BaseUrl?.OriginalString}{path}", null, options, Method.Delete);
+        }
+        
     }
 }
