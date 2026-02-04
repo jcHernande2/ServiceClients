@@ -24,17 +24,11 @@
         {
             restClient = HttpClient;
         }
-        private async Task<TO> ExecuteAsync<TO, TI>(string url, TI data,HttpRequestOptions options,Method method )
+        private async Task<TO> ExecuteAsync<TO, TI>(string url, TI data, HttpRequestOptions options, Method method)
         {
-            var request = CreateRequest(url, data, options,method);
-            try
-            {
-                var response = await restClient.ExecuteAsync(request).ConfigureAwait(false) as RestResponse;
-                return HandleResponse<TO>(response);
-            }
-            catch (Exception) {
-                throw;
-            }
+            var request = CreateRequest(url, data, options, method);
+            var response = await restClient.ExecuteAsync(request).ConfigureAwait(false) as RestResponse;
+            return HandleResponse<TO>(response);
         }
 
         private TO Execute<TO, TI>(string url, TI data, HttpRequestOptions options, Method method)
@@ -76,6 +70,11 @@
 
         private TO HandleResponse<TO>(RestResponse response)
         {
+            if (response == null)
+            {
+                throw new Exception("No response received from server.");
+            }
+
             if (!response.IsSuccessful)
             {
                 HandleErrorResponse(response);
@@ -84,6 +83,12 @@
             if (response.ResponseStatus == ResponseStatus.Error)
             {
                 throw new TimeoutException($"Request timeout: {response.ErrorMessage}");
+            }
+
+            // Treat 204 No Content or empty body as default(TO)
+            if (response.StatusCode == HttpStatusCode.NoContent || string.IsNullOrWhiteSpace(response.Content))
+            {
+                return default!;
             }
 
             try
@@ -142,7 +147,7 @@
                 default: throw new NotImplementedException();
             };
         }
-        private async Task<TO> SendAsync<TO, TI>(TI obj, string token, HttpMethod httpMethod, string urlParams = "")
+        private async Task<TO> SendAsync<TO, TI>(TI obj, AuthenticationHeaderValue? auth, HttpMethod httpMethod, string urlParams = "", CancellationToken cancellationToken = default)
         {
             var method = httpMethod.Method.ToUpper() switch
             {
@@ -155,9 +160,9 @@
 
             var request = new RestRequest(urlParams, method);
 
-            if (!string.IsNullOrEmpty(token))
+            if (auth != null)
             {
-                request.AddHeader("Authorization", $"Bearer {token}");
+                request.AddHeader("Authorization", auth.ToString());
             }
 
             if (obj != null && method != Method.Get && method != Method.Delete)
@@ -166,15 +171,8 @@
                 request.AddJsonBody(json);
             }
 
-            try
-            {
-                var response = await restClient.ExecuteAsync(request).ConfigureAwait(false) as RestResponse;
-                return HandleResponse<TO>(response);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            var response = await restClient.ExecuteAsync(request, cancellationToken).ConfigureAwait(false) as RestResponse;
+            return HandleResponse<TO>(response);
         }
         public string GetBaseUrl()
         {
@@ -188,24 +186,23 @@
         {
             return await ExecuteAsync<TO, TI>($"{restClient.Options.BaseUrl?.OriginalString}{path}", data, options, Method.Post);
         }
-        public async Task<TO> PostWithTokenAsync<TO, TI>(
-        string urlOrRelativePath,
-        TI body,
-        string token,
-        string scheme = "Bearer",
-        HttpRequestOptions options = null,
-        CancellationToken cancellationToken = default)
-        {
-            return await this.SendAsync<TO, TI>(body, token, HttpMethod.Post, urlOrRelativePath).ConfigureAwait(false);
-        }
+        public Task<TO> PostWithTokenAsync<TO, TI>(
+            string urlOrRelativePath,
+            TI body,
+            string token,
+            string scheme = "Bearer",
+            HttpRequestOptions options = null,
+            CancellationToken cancellationToken = default)
+            => PostAuthenticatedAsync<TO, TI>(urlOrRelativePath, body, string.IsNullOrEmpty(token) ? null : new AuthenticationHeaderValue(scheme, token), options, cancellationToken);
+
         public async Task<TO> PostAuthenticatedAsync<TO, TI>(
-        string urlOrRelativePath,
-        TI body,
-        AuthenticationHeaderValue auth,
-        HttpRequestOptions options = null,
-        CancellationToken cancellationToken = default)
+            string urlOrRelativePath,
+            TI body,
+            AuthenticationHeaderValue auth,
+            HttpRequestOptions options = null,
+            CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            return await SendAsync<TO, TI>(body, auth, HttpMethod.Post, urlOrRelativePath, cancellationToken).ConfigureAwait(false);
         }
         public TO Get<TO>(string path, HttpRequestOptions options = null)
         {

@@ -3,12 +3,9 @@ namespace jcHernande2.ServiceClients.Http.Tests.Integrations
     using System;
     using System.Net.Http;
     using System.Threading.Tasks;
-    
     using jcHernande2.ServiceClients.Http.Integrations;
-
     using jcHernande2.ServiceClients.Http.Tests.Models;
     using Xunit;
-
 
     public class HttpClientServiceTests
     {
@@ -41,7 +38,7 @@ namespace jcHernande2.ServiceClients.Http.Tests.Integrations
         public async Task PostWithTokenAsync_ShouldReturnCreatedResource()
         {
             var req = new JsonRequest { Title = "foo", Body = "bar", UserId = 1 };
-            var result = await _httpClientService.PostWithTokenAsync<JsonResponse, JsonRequest>(req, "", "posts");
+            var result = await _httpClientService.PostWithTokenAsync<JsonResponse, JsonRequest>("posts", req, "");
 
             Assert.NotNull(result);
             Assert.True(result.Id > 0);

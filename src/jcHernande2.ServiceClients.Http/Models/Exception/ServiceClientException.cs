@@ -15,6 +15,12 @@
 
         public ServiceClientException(string message) : base(message) { }
 
+        public ServiceClientException(string message, ModelException model)
+            : base(message)
+        {
+            Model = model;
+        }
+
         public ServiceClientException(string message, Exception inner) : base(message, inner) { }
 
         public ServiceClientException(string message, HttpStatusCode statusCode, string errorCode = null, object model = null)
